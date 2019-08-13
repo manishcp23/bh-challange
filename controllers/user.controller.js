@@ -1,4 +1,5 @@
-const User = require('../models').user;
+const Organization = require('./../models').organization;
+const Role = require('./../models').role;
 const authService = require('../services/auth.service');
 const { to, ReE, ReS } = require('../services/util.service');
 
@@ -23,8 +24,14 @@ module.exports.create = create;
 
 const get = async function (req, res) {
     let user = req.user;
+    let err, organization, role;
+    
+    [err, organization] = await to(Organization.findOne({ where: { OrganizationId: user.OrganizationId } }));
+    if (err) return await ReE(res, "err finding organization related to user");
+    [err, role] = await to(Role.findOne({ where: { RoleId: user.RoleId } }));
+    if (err) return await ReE(res, "err finding role");
 
-    return await ReS(res, { user: user.toWeb() });
+    return await ReS(res, Object.assign( { user: user.toWeb() }, { role: role.toWeb() }, { organization: organization.toWeb() }));
 }
 module.exports.get = get;
 
